@@ -18,6 +18,18 @@ export function profileImageUrlUpload () {
     if (req.body.imageUrl !== undefined) {
       const url = req.body.imageUrl
       if (url.match(/(.)*solve\/challenges\/server-side(.)*/) !== null) req.app.locals.abused_ssrf_bug = true
+      const allowedHostnames = ['images.example.com', 'cdn.example.org'] // Add allowed hostnames here
+      let parsedUrl
+      try {
+        parsedUrl = new URL(url)
+      } catch (e) {
+        next(new Error('Invalid image URL format'))
+        return
+      }
+      if (!allowedHostnames.includes(parsedUrl.hostname)) {
+        next(new Error('Image URL host not allowed'))
+        return
+      }
       const loggedInUser = security.authenticatedUsers.get(req.cookies.token)
       if (loggedInUser) {
         try {
